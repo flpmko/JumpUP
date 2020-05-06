@@ -11,14 +11,14 @@ package sk.uniza.fri.inf.simko.jump;
  */
 public class Spring extends Platform {
     private boolean isHit;
-    private float power;
-    private float time;
+    private boolean isSprung;
+    private final double springJumpTime = 0.2;
     
     public Spring() {
         super();
         this.setTexture("spring.png");
         this.isHit = false;
-        this.power = 3;
+        this.isSprung = false;
     }
 
     public boolean getIsHit() {
@@ -29,7 +29,15 @@ public class Spring extends Platform {
         this.isHit = isHit;
     }
 
-    public float getPower() {
-        return this.power;
+    public double getSpringJumpTime() {
+        return this.springJumpTime;
+    }
+
+    public boolean getIsSprung() {
+        return this.isSprung;
+    }
+
+    public void setIsSprung(boolean isSprung) {
+        this.isSprung = isSprung;
     }
 }

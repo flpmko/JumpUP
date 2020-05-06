@@ -91,16 +91,15 @@ public class Game extends ApplicationAdapter {
         this.font.draw(this.batch, "jumpUP", 200, 990);
         this.font.draw(this.batch, "score: " + this.scoreCounter, 10, 990);
         this.font.draw(this.batch, "coins: " + this.coinCounter, 390, 990);
+        if (this.player.getRectangle().y == 0) {
+            this.gameOver(this.batch);
+        }
         this.batch.end();
 
         //pohyb playera a platform
-        
         this.player.move();
         this.player.jumping();
-//        if(this.player.isJumpPressed()){
-//            this.player.jumping();
-//        }
-        
+
         this.player.falling();
         this.movePlatforms();
 
@@ -113,9 +112,6 @@ public class Game extends ApplicationAdapter {
         this.checkCoins();
         //this.checkScore();
 
-        //System.out.println("canJump> " + this.player.getCanJump());
-        //System.out.println("isFalling> " + this.player.getIsFalling());
-        System.out.println("----isJumping>" + this.player.getIsJumping());
     }
 
     private void spawnPlatform(Class<?> platformType) {
@@ -149,7 +145,7 @@ public class Game extends ApplicationAdapter {
     private Platform createSpawnPlatform(Class<?> platformType) {
         Platform p = new Platform();
         try {
-            p = (Platform)Class.forName(platformType.getName()).getDeclaredConstructor().newInstance();
+            p = (Platform) Class.forName(platformType.getName()).getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             System.out.println(e.getStackTrace());
         }
@@ -166,8 +162,8 @@ public class Game extends ApplicationAdapter {
     }
 
     public void spawnStart() {
-        for (int i = 0; i < 10; i++) {
-            Platform p = new Platform(MathUtils.random(0, 500 - 64), 80 + 80 * i);
+        for (int i = 0; i < 15; i++) {
+            Platform p = new Platform(MathUtils.random(0, 500 - 64), 100 + 100 * i);
             this.platforms.add(p);
         }
     }
@@ -210,7 +206,7 @@ public class Game extends ApplicationAdapter {
             }
         }
     }
-    
+
     private void checkScore() {
         if (this.player.getIsJumping()) {
             this.scoreCounter += this.player.getRectForCoins().y;
@@ -220,13 +216,13 @@ public class Game extends ApplicationAdapter {
     //na zaklade casu od posledneho spawnu rozhodne, ci spawnut dalsiu platformu
     private void checkSpawnTime() {
         if (this.player.getCanJump()) {
-            if (TimeUtils.nanoTime() - this.lastSpawnedPlatform.getLastSpawnTime() > 1000000000 && this.platforms.size < 15) {
+            if (TimeUtils.nanoTime() - this.lastSpawnedPlatform.getLastSpawnTime() > 1000000000 && this.platforms.size < 20) {
                 this.spawnPlatform(Platform.class);
             }
-            if (TimeUtils.nanoTime() - this.lastSpawnedCloud.getLastSpawnTime() > 1000000000 && this.platforms.size < 15) {
+            if (TimeUtils.nanoTime() - this.lastSpawnedCloud.getLastSpawnTime() > 1000000000 && this.platforms.size < 20) {
                 this.spawnPlatform(Cloud.class);
             }
-            if (TimeUtils.nanoTime() - this.lastSpawnedSpring.getLastSpawnTime() > 1000000000 && this.platforms.size < 15) {
+            if (TimeUtils.nanoTime() - this.lastSpawnedSpring.getLastSpawnTime() > 1000000000 && this.platforms.size < 20) {
                 this.spawnPlatform(Spring.class);
             }
         }
@@ -258,21 +254,38 @@ public class Game extends ApplicationAdapter {
                     this.player.getRectangle().y = platform.getRectangle().y + platform.getRectangle().height;
                     this.player.getRectForCoins().y = platform.getRectangle().y + platform.getRectangle().height;
                     if (platform instanceof Cloud) {
-                        ((Cloud)platform).setIsHit(true);
-                        ((Cloud)platform).setHitTime(((Cloud)platform).getHitTime() + Gdx.graphics.getDeltaTime());
+                        ((Cloud) platform).setIsHit(true);
+                        ((Cloud) platform).setHitTime(((Cloud) platform).getHitTime() + Gdx.graphics.getDeltaTime());
+                    }
+                    if (platform instanceof Spring) {
+                        ((Spring) platform).setIsHit(true);
                     }
                     this.player.setCanJump(true);
                     //System.out.println("kolizia");
 
                 }
                 if (platform instanceof Cloud) {
-                    if (((Cloud)platform).getIsHit() && ((Cloud)platform).getHitTime() > 0.1) {
+                    if (((Cloud) platform).getIsHit() && ((Cloud) platform).getHitTime() > 0.04) {
                         this.platforms.removeValue(platform, true);
-
+                    }
+                }
+                //TODO dokoncit nastavenie jumpTime naspat
+                if (platform instanceof Spring) {
+                    if (((Spring) platform).getIsHit()) {
+                        this.player.setMaxJumpTime(((Spring) platform).getSpringJumpTime());
+                        ((Spring) platform).setIsSprung(true);
+                        System.out.println("^^^JUMP^^^");
+                        //this.player.setMaxJumpTime(0.08);
                     }
                 }
             }
         }
+    }
+
+    private void gameOver(SpriteBatch batch) {
+        this.font.getData().setScale(4);
+        this.font.draw(batch, "GAME OVER", 70, 550);
+        this.font.getData().setScale(2);
     }
 
     @Override

@@ -14,11 +14,15 @@ import com.badlogic.gdx.math.Rectangle;
  * @author flpmko
  */
 public class Player extends GameObject {
+    
+    public static final double JUMP = 0.3;
 
     private double gravity = 1;
+    private double jumpBuffer = 0.3;
+    private double maxJumpTime = 0.08;
     
     private float acceleration;
-    private float time;
+    private float jumpTime;
     private float dy;
     private float maxDY;
     private float lastY;
@@ -32,7 +36,7 @@ public class Player extends GameObject {
     public Player() {
         super("man.png", 32, 1, 500 / 2 - 16, 30);
         this.acceleration = 5; //100
-        this.time = 0;
+        this.jumpTime = 0;
         this.dy = 0;
         this.maxDY = 10;
         this.lastY = this.getRectangle().y;
@@ -100,14 +104,30 @@ public class Player extends GameObject {
         return this.rectForCoins;
     }
 
+    public double getJumpBuffer() {
+        return this.jumpBuffer;
+    }
+
+    public void setJumpBuffer(double jumpBuffer) {
+        this.jumpBuffer = jumpBuffer;
+    }
+
+    public double getMaxJumpTime() {
+        return this.maxJumpTime;
+    }
+
+    public void setMaxJumpTime(double maxJumpTime) {
+        this.maxJumpTime = maxJumpTime;
+    }
+
     public void move() {
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            this.getRectangle().x += 400 * Gdx.graphics.getDeltaTime();
-            this.rectForCoins.x += 400 * Gdx.graphics.getDeltaTime();
+            this.getRectangle().x += 500 * Gdx.graphics.getDeltaTime();
+            this.rectForCoins.x += 500 * Gdx.graphics.getDeltaTime();
         }
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            this.getRectangle().x -= 400 * Gdx.graphics.getDeltaTime();
-            this.rectForCoins.x -= 400 * Gdx.graphics.getDeltaTime();
+            this.getRectangle().x -= 500 * Gdx.graphics.getDeltaTime();
+            this.rectForCoins.x -= 500 * Gdx.graphics.getDeltaTime();
         }
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
             //this.canJump = true;
@@ -117,20 +137,19 @@ public class Player extends GameObject {
     }
 
     public void jumping() {
-        this.time += Gdx.graphics.getDeltaTime();
+        this.jumpTime += Gdx.graphics.getDeltaTime();
         
 
         if (this.canJump) {
             this.isJumping = true;
             this.dy -= this.acceleration;
-            this.getRectangle().y -= 0.3;
-            //this.dy;
-            //this.rectForCoins.y += this.dy;
+            this.getRectangle().y -= this.jumpBuffer;
+            this.rectForCoins.y -= this.jumpBuffer;
 
-            if (this.time > 0.08) {
+            if (this.jumpTime > this.maxJumpTime) {
                 this.canJump = false;
                 this.isJumping = false;
-                this.time = 0;
+                this.jumpTime = 0;
                 //this.dy = 0;
             }
         }
