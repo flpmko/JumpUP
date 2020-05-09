@@ -4,13 +4,11 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.MathUtils;
 
 import com.badlogic.gdx.utils.Array;
@@ -28,7 +26,7 @@ public class Game extends ApplicationAdapter {
     private OrthographicCamera camera;
 
     private Player player;
-    private Array<GameObject> platforms;
+    private Array<GameObject> gameObject;
 
     private Platform lastSpawnedCloud;
     private Platform lastSpawnedSpring;
@@ -38,6 +36,8 @@ public class Game extends ApplicationAdapter {
 
     private int coinCounter;
     private long scoreCounter;
+
+    private boolean arePlatformsMoving;
 
     @Override
     public void create() {
@@ -49,7 +49,7 @@ public class Game extends ApplicationAdapter {
         this.camera.setToOrtho(false, 500, 1000);
 
         this.player = new Player();
-        this.platforms = new Array<>();
+        this.gameObject = new Array<>();
         this.spawnGround();
         this.spawnStart();
         this.spawnPlatform(Platform.class);
@@ -64,8 +64,11 @@ public class Game extends ApplicationAdapter {
         this.coinCounter = 0;
         this.scoreCounter = 0;
 
+        this.arePlatformsMoving = false;
+
         Coin coin = new Coin();
-        this.platforms.add(coin);
+        this.gameObject.add(coin);
+        this.gameObject.add(new Spring());
     }
 
     @Override
@@ -78,19 +81,15 @@ public class Game extends ApplicationAdapter {
         //vykreslenie objektov
         this.batch.setProjectionMatrix(this.camera.combined);
 
-        this.shapeRenderer.begin(ShapeType.Filled);
-        this.shapeRenderer.setColor(Color.RED);
-        this.shapeRenderer.rect(this.player.getRectangle().x, this.player.getRectangle().y, this.player.getRectangle().width, this.player.getRectangle().height);
-        this.shapeRenderer.end();
-
+        //vykreslovanie
         this.batch.begin();
         this.batch.draw(this.player.getTexture(), this.player.getRectangle().x - 16, this.player.getRectangle().y);
-        for (GameObject go : this.platforms) {
+        for (GameObject go : this.gameObject) {
             this.batch.draw(go.getTexture(), go.getRectangle().x, go.getRectangle().y);
         }
         this.font.draw(this.batch, "jumpUP", 200, 990);
         this.font.draw(this.batch, "score: " + this.scoreCounter, 10, 990);
-        this.font.draw(this.batch, "coins: " + this.coinCounter, 390, 990);
+        this.font.draw(this.batch, "coins: " + this.coinCounter, 370, 990);
         if (this.player.getRectangle().y == 0) {
             this.gameOver(this.batch);
         }
@@ -99,7 +98,6 @@ public class Game extends ApplicationAdapter {
         //pohyb playera a platform
         this.player.move();
         this.player.jumping();
-
         this.player.falling();
         this.movePlatforms();
 
@@ -110,7 +108,7 @@ public class Game extends ApplicationAdapter {
         //kontrola kolizie
         this.checkCollision();
         this.checkCoins();
-        //this.checkScore();
+        this.checkScore();
 
     }
 
@@ -124,9 +122,9 @@ public class Game extends ApplicationAdapter {
             isOverlap = false;
 
             //checkuje overlapping
-            for (GameObject p : this.platforms) {
+            for (GameObject p : this.gameObject) {
                 if (platform.getBounds().overlaps(p.getBounds())) {
-                    System.out.println("overlap");
+                    //System.out.println("overlap");
                     isOverlap = true;
                     break;
                 }
@@ -136,8 +134,8 @@ public class Game extends ApplicationAdapter {
                 platform = this.createSpawnPlatform(platformType);
             } else {
                 shouldGenerate = false;
-                System.out.println("-------resolved");
-                this.platforms.add(platform);
+                //System.out.println("-------resolved");
+                this.gameObject.add(platform);
             }
         }
     }
@@ -145,7 +143,7 @@ public class Game extends ApplicationAdapter {
     private Platform createSpawnPlatform(Class<?> platformType) {
         Platform p = new Platform();
         try {
-            p = (Platform) Class.forName(platformType.getName()).getDeclaredConstructor().newInstance();
+            p = (Platform)Class.forName(platformType.getName()).getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             System.out.println(e.getStackTrace());
         }
@@ -157,19 +155,24 @@ public class Game extends ApplicationAdapter {
         } else {
             this.lastSpawnedPlatform = p;
         }
-
         return p;
     }
 
     public void spawnStart() {
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 25; i++) {
             Platform p = new Platform(MathUtils.random(0, 500 - 64), 100 + 100 * i);
-            this.platforms.add(p);
+            this.gameObject.add(p);
         }
     }
 
     public void spawnCoins() {
-
+        Coin coin = new Coin();
+        this.gameObject.add(coin);
+        for (GameObject object : this.gameObject) {
+            if (object.objectCollision(coin) && object != coin) {
+                this.gameObject.removeValue(coin, true);
+            }
+        }
     }
 
     //spawne zem na zaciatku hry
@@ -178,51 +181,55 @@ public class Game extends ApplicationAdapter {
         ground.setTexture("ground.png");
         ground.setHeight(10);
         ground.setWidth(500);
-        this.platforms.add(ground);
+        this.gameObject.add(ground);
 
     }
 
     //automaticky pohyb platformami na zaklade pohybu hraca
     private void movePlatforms() {
-        if (this.player.getRectangle().y > 200) { // !this.player.getCanJump() ||
-            for (Iterator<GameObject> iter = this.platforms.iterator(); iter.hasNext();) {
+        if (this.player.getRectangle().y > 200) {
+            for (Iterator<GameObject> iter = this.gameObject.iterator(); iter.hasNext();) {
                 GameObject p = iter.next();
                 p.getRectangle().y -= 100 * Gdx.graphics.getDeltaTime();
                 p.getBounds().y -= 100 * Gdx.graphics.getDeltaTime();
+                this.arePlatformsMoving = true;
                 if (p.getRectangle().y + 64 < 0) {
                     iter.remove();
                 }
             }
+        } else {
+            this.arePlatformsMoving = false;
         }
     }
 
     private void checkCoins() {
-        for (GameObject platform : this.platforms) {
-            if (platform instanceof Coin) {
-                if (platform.getRectangle().overlaps(this.player.getRectForCoins())) {
+        for (GameObject object : this.gameObject) {
+            if (object instanceof Coin) {
+                if (object.getRectangle().overlaps(this.player.getRectForCoins())) {
                     this.coinCounter++;
-                    this.platforms.removeValue(platform, true);
+                    this.gameObject.removeValue(object, true);
                 }
             }
         }
     }
 
     private void checkScore() {
-        if (this.player.getIsJumping()) {
-            this.scoreCounter += this.player.getRectForCoins().y;
+        if (this.player.getIsJumping() && this.arePlatformsMoving) {
+            this.scoreCounter += this.player.getRectangle().y - this.player.getLastY();
         }
     }
 
     //na zaklade casu od posledneho spawnu rozhodne, ci spawnut dalsiu platformu
     private void checkSpawnTime() {
         if (this.player.getCanJump()) {
-            if (TimeUtils.nanoTime() - this.lastSpawnedPlatform.getLastSpawnTime() > 1000000000 && this.platforms.size < 20) {
+            if (TimeUtils.nanoTime() - this.lastSpawnedPlatform.getLastSpawnTime() > 1000000000 && this.gameObject.size < 30) {
                 this.spawnPlatform(Platform.class);
+                this.spawnCoins();
             }
-            if (TimeUtils.nanoTime() - this.lastSpawnedCloud.getLastSpawnTime() > 1000000000 && this.platforms.size < 20) {
+            if (TimeUtils.nanoTime() - this.lastSpawnedCloud.getLastSpawnTime() > 1000000000 && this.gameObject.size < 30) {
                 this.spawnPlatform(Cloud.class);
             }
-            if (TimeUtils.nanoTime() - this.lastSpawnedSpring.getLastSpawnTime() > 1000000000 && this.platforms.size < 20) {
+            if (TimeUtils.nanoTime() - this.lastSpawnedSpring.getLastSpawnTime() > 1000000000 && this.gameObject.size < 30) {
                 this.spawnPlatform(Spring.class);
             }
         }
@@ -232,57 +239,82 @@ public class Game extends ApplicationAdapter {
     private void checkPlayerBounds() {
         if (this.player.getRectangle().y > 1000 - 128) {
             this.player.getRectangle().y = 1000 - 128;
+            this.player.getRectForCoins().y = 1000 - 128;
         }
         if (this.player.getRectangle().x < 0) {
             this.player.getRectangle().x = 500;
+            this.player.getRectForCoins().x = 500;
         }
         if (this.player.getRectangle().x > 500) {
             this.player.getRectangle().x = 0;
+            this.player.getRectForCoins().x = 0;
         }
         if (this.player.getRectangle().y < 0) {
             this.player.getRectangle().y = 0;
+            this.player.getRectForCoins().y = 0;
         }
     }
 
     //kontroluje koliziu hraca a platform
     private void checkCollision() {
-        for (GameObject platform : this.platforms) {
+        for (GameObject platform : this.gameObject) {
             if (!(platform instanceof Coin)) {
 
                 //kontroluje koliziu iba ked hrac pada
                 if (this.player.getIsFalling() && this.player.objectCollision(platform)) {
                     this.player.getRectangle().y = platform.getRectangle().y + platform.getRectangle().height;
                     this.player.getRectForCoins().y = platform.getRectangle().y + platform.getRectangle().height;
-                    if (platform instanceof Cloud) {
-                        ((Cloud) platform).setIsHit(true);
-                        ((Cloud) platform).setHitTime(((Cloud) platform).getHitTime() + Gdx.graphics.getDeltaTime());
-                    }
-                    if (platform instanceof Spring) {
-                        ((Spring) platform).setIsHit(true);
-                    }
+                    this.setPlatformAsHit(platform);
+
                     this.player.setCanJump(true);
                     //System.out.println("kolizia");
+                    //this.checkSpringHit(platform);
+                }
 
-                }
-                if (platform instanceof Cloud) {
-                    if (((Cloud) platform).getIsHit() && ((Cloud) platform).getHitTime() > 0.04) {
-                        this.platforms.removeValue(platform, true);
-                    }
-                }
-                //TODO dokoncit nastavenie jumpTime naspat
-                if (platform instanceof Spring) {
-                    if (((Spring) platform).getIsHit()) {
-                        this.player.setMaxJumpTime(((Spring) platform).getSpringJumpTime());
-                        ((Spring) platform).setIsSprung(true);
-                        System.out.println("^^^JUMP^^^");
-                        //this.player.setMaxJumpTime(0.08);
-                    }
+                this.checkCloudTime(platform);
+                this.checkSpringHit(platform);
+            }
+        }
+    }
+
+    private void setPlatformAsHit(GameObject platform) {
+        if (platform instanceof Cloud) {
+            ((Cloud)platform).setIsHit(true);
+            ((Cloud)platform).setHitTime(((Cloud)platform).getHitTime() + Gdx.graphics.getDeltaTime());
+        }
+        if (platform instanceof Spring) {
+            ((Spring)platform).setIsHit(true);
+            //((Spring)platform).setJumpTimeResetTimer(((Spring)platform).getJumpTimeResetTimer() + Gdx.graphics.getDeltaTime());
+        }
+        if (platform instanceof Platform) {
+            ((Platform)platform).setIsHit(true);
+        }
+    }
+
+    private void checkCloudTime(GameObject platform) {
+        if (platform instanceof Cloud) {
+            if (((Cloud)platform).getIsHit() && ((Cloud)platform).getHitTime() > 0.04) {
+                this.gameObject.removeValue(platform, true);
+            }
+        }
+    }
+
+    private void checkSpringHit(GameObject platform) {
+        if (platform instanceof Spring) {
+            if (((Spring)platform).getIsHit()) {
+                this.player.setMaxJumpTime(((Spring)platform).getSpringJumpTime());
+                ((Spring)platform).setJumpTimeResetTimer(((Spring)platform).getJumpTimeResetTimer() + 1);
+                if (((Spring)platform).getJumpTimeResetTimer() > 10) {
+                    this.player.setMaxJumpTime(0.08);
+                    ((Spring)platform).setIsHit(false);
+                    ((Spring)platform).setJumpTimeResetTimer(0);
                 }
             }
         }
     }
 
     private void gameOver(SpriteBatch batch) {
+        this.player.setCanMove(false);
         this.font.getData().setScale(4);
         this.font.draw(batch, "GAME OVER", 70, 550);
         this.font.getData().setScale(2);

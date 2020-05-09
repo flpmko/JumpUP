@@ -14,22 +14,23 @@ import com.badlogic.gdx.math.Rectangle;
  * @author flpmko
  */
 public class Player extends GameObject {
-    
+
     public static final double JUMP = 0.3;
 
     private double gravity = 1;
     private double jumpBuffer = 0.3;
     private double maxJumpTime = 0.08;
-    
+
     private float acceleration;
     private float jumpTime;
     private float dy;
     private float maxDY;
     private float lastY;
-    
+
     private boolean isJumping;
     private boolean canJump;
     private boolean isFalling;
+    private boolean canMove = true;
 
     private Rectangle rectForCoins;
 
@@ -40,7 +41,7 @@ public class Player extends GameObject {
         this.dy = 0;
         this.maxDY = 10;
         this.lastY = this.getRectangle().y;
-        
+
         this.isJumping = false;
         this.canJump = true;
         this.isFalling = true;
@@ -50,22 +51,6 @@ public class Player extends GameObject {
         this.rectForCoins.width = 64;
         this.rectForCoins.x = 500 / 2 - 32;
         this.rectForCoins.y = 30;
-    }
-
-    public float getAcceleration() {
-        return this.acceleration;
-    }
-
-    public void setAcceleration(float acceleration) {
-        this.acceleration = acceleration;
-    }
-
-    public float getDy() {
-        return this.dy;
-    }
-
-    public void setDy(float dy) {
-        this.dy = dy;
     }
 
     public boolean getCanJump() {
@@ -82,14 +67,6 @@ public class Player extends GameObject {
 
     public void setIsFalling(boolean isFalling) {
         this.isFalling = isFalling;
-    }
-
-    public double getGravity() {
-        return this.gravity;
-    }
-    
-    public void setGravity(double gravity) {
-        this.gravity = gravity;
     }
 
     public boolean getIsJumping() {
@@ -120,25 +97,33 @@ public class Player extends GameObject {
         this.maxJumpTime = maxJumpTime;
     }
 
+    public boolean getCanMove() {
+        return this.canMove;
+    }
+
+    public void setCanMove(boolean canMove) {
+        this.canMove = canMove;
+    }
+
+    public float getLastY() {
+        return this.lastY;
+    }
+
     public void move() {
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            this.getRectangle().x += 500 * Gdx.graphics.getDeltaTime();
-            this.rectForCoins.x += 500 * Gdx.graphics.getDeltaTime();
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            this.getRectangle().x -= 500 * Gdx.graphics.getDeltaTime();
-            this.rectForCoins.x -= 500 * Gdx.graphics.getDeltaTime();
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            //this.canJump = true;
-            this.jumping();
-            //this.time = 0;
+        if (this.canMove) {
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+                this.getRectangle().x += 500 * Gdx.graphics.getDeltaTime();
+                this.rectForCoins.x += 500 * Gdx.graphics.getDeltaTime();
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+                this.getRectangle().x -= 500 * Gdx.graphics.getDeltaTime();
+                this.rectForCoins.x -= 500 * Gdx.graphics.getDeltaTime();
+            }
         }
     }
 
     public void jumping() {
         this.jumpTime += Gdx.graphics.getDeltaTime();
-        
 
         if (this.canJump) {
             this.isJumping = true;
@@ -150,7 +135,6 @@ public class Player extends GameObject {
                 this.canJump = false;
                 this.isJumping = false;
                 this.jumpTime = 0;
-                //this.dy = 0;
             }
         }
     }
@@ -159,6 +143,7 @@ public class Player extends GameObject {
         this.dy += this.gravity;
         this.getRectangle().y -= this.dy;
         this.rectForCoins.y -= this.dy;
+        
         this.lastY = this.getRectangle().y + this.dy;
 
         if (this.getRectangle().y < this.lastY) {

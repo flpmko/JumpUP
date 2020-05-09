@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 public class Platform extends GameObject {
     private Rectangle bounds;
     private long lastSpawnTime;
+    private boolean isHit;
     
     public Platform() {
         super("plank.png", 64, 26, MathUtils.random(0, 500 - 64), MathUtils.random(1000, 2000));
@@ -25,6 +26,7 @@ public class Platform extends GameObject {
         this.bounds.x = this.getRectangle().x - 64 / 2;
         this.bounds.y = this.getRectangle().y - 26 / 2;
         this.lastSpawnTime = TimeUtils.nanoTime();
+        this.isHit = false;
     }
     
     public Platform(int x, int y) {
@@ -54,5 +56,13 @@ public class Platform extends GameObject {
 
     public void setLastSpawnTime(long lastSpawnTime) {
         this.lastSpawnTime = lastSpawnTime;
+    }
+
+    public boolean getIsHit() {
+        return this.isHit;
+    }
+
+    public void setIsHit(boolean isHit) {
+        this.isHit = isHit;
     }
 }
