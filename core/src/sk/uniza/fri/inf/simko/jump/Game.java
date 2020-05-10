@@ -2,8 +2,6 @@ package sk.uniza.fri.inf.simko.jump;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -13,7 +11,15 @@ import com.badlogic.gdx.math.MathUtils;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Iterator;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Game extends ApplicationAdapter {
 
@@ -21,8 +27,6 @@ public class Game extends ApplicationAdapter {
     public static final float HEIGTH = 1000;
 
     private SpriteBatch batch;
-    private Sound jump;
-    private Music music;
     private OrthographicCamera camera;
 
     private Player player;
@@ -53,8 +57,6 @@ public class Game extends ApplicationAdapter {
         this.spawnGround();
         this.spawnStart();
         this.spawnPlatform(Platform.class);
-        //this.spawnGlass();
-        //this.spawnSpring();
 
         this.lastSpawnedPlatform = new Platform();
         this.lastSpawnedSpring = new Spring();
@@ -65,14 +67,10 @@ public class Game extends ApplicationAdapter {
         this.scoreCounter = 0;
 
         this.arePlatformsMoving = false;
-
-        Coin coin = new Coin();
-        this.gameObject.add(coin);
-        this.gameObject.add(new Spring());
     }
 
     @Override
-    public void render() {
+    public void render(){
         //vyfarbenie pozadia a update kamery
         Gdx.gl.glClearColor(135 / 255f, 206 / 255f, 235 / 255f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -91,7 +89,11 @@ public class Game extends ApplicationAdapter {
         this.font.draw(this.batch, "score: " + this.scoreCounter, 10, 990);
         this.font.draw(this.batch, "coins: " + this.coinCounter, 370, 990);
         if (this.player.getRectangle().y == 0) {
-            this.gameOver(this.batch);
+            try {
+                this.gameOver(this.batch);
+            } catch (FileNotFoundException ex) {
+                System.err.println("File not found");
+            }
         }
         this.batch.end();
 
@@ -109,7 +111,6 @@ public class Game extends ApplicationAdapter {
         this.checkCollision();
         this.checkCoins();
         this.checkScore();
-
     }
 
     private void spawnPlatform(Class<?> platformType) {
@@ -159,7 +160,7 @@ public class Game extends ApplicationAdapter {
     }
 
     public void spawnStart() {
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < 20; i++) {
             Platform p = new Platform(MathUtils.random(0, 500 - 64), 100 + 100 * i);
             this.gameObject.add(p);
         }
@@ -262,15 +263,13 @@ public class Game extends ApplicationAdapter {
 
                 //kontroluje koliziu iba ked hrac pada
                 if (this.player.getIsFalling() && this.player.objectCollision(platform)) {
+                    
                     this.player.getRectangle().y = platform.getRectangle().y + platform.getRectangle().height;
                     this.player.getRectForCoins().y = platform.getRectangle().y + platform.getRectangle().height;
+                    
                     this.setPlatformAsHit(platform);
-
                     this.player.setCanJump(true);
-                    //System.out.println("kolizia");
-                    //this.checkSpringHit(platform);
                 }
-
                 this.checkCloudTime(platform);
                 this.checkSpringHit(platform);
             }
@@ -278,13 +277,13 @@ public class Game extends ApplicationAdapter {
     }
 
     private void setPlatformAsHit(GameObject platform) {
+        
         if (platform instanceof Cloud) {
             ((Cloud)platform).setIsHit(true);
             ((Cloud)platform).setHitTime(((Cloud)platform).getHitTime() + Gdx.graphics.getDeltaTime());
         }
         if (platform instanceof Spring) {
             ((Spring)platform).setIsHit(true);
-            //((Spring)platform).setJumpTimeResetTimer(((Spring)platform).getJumpTimeResetTimer() + Gdx.graphics.getDeltaTime());
         }
         if (platform instanceof Platform) {
             ((Platform)platform).setIsHit(true);
@@ -313,11 +312,25 @@ public class Game extends ApplicationAdapter {
         }
     }
 
-    private void gameOver(SpriteBatch batch) {
+    private void gameOver(SpriteBatch batch) throws FileNotFoundException {
         this.player.setCanMove(false);
         this.font.getData().setScale(4);
         this.font.draw(batch, "GAME OVER", 70, 550);
         this.font.getData().setScale(2);
+        
+        Scanner citac = new Scanner(new FileReader("highscore.txt"));
+        long highscore = citac.nextLong();
+        
+        if (this.scoreCounter > highscore) {
+            highscore = this.scoreCounter;
+            File subor = new File("highscore.txt");
+            PrintWriter zapisovac = new PrintWriter(subor);
+            zapisovac.println(highscore);
+            zapisovac.close();
+        }
+        
+        this.font.draw(batch, "Highscore: " + highscore, 160, 400);
+        this.font.draw(batch, "Your score: " + this.scoreCounter, 160, 350);
     }
 
     @Override

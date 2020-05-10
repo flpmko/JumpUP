@@ -45,6 +45,14 @@ public abstract class GameObject {
         return this.rectangle;
     }
     
+    public void setHeight(int height) {
+        this.getRectangle().height = height;
+    }
+    
+    public void setWidth(int width) {
+        this.getRectangle().width = width;
+    }
+    
     public Rectangle getBounds() {
         return this.bounds;
     }
@@ -52,9 +60,9 @@ public abstract class GameObject {
     public boolean objectCollision(GameObject object) {
         if (this.getRectangle().overlaps(object.getRectangle())) {
             return true;
+        } else {
+            return false;
         }
-        return false;
-        //return this.getRight() >= object.getLeft() && this.getLeft() <= object.getRight() && this.getBot() >= object.getTop() && this.getTop() <= object.getBot();
     }
     
 }

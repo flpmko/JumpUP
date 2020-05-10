@@ -5,6 +5,7 @@
  */
 package sk.uniza.fri.inf.simko.jump;
 
+
 /**
  *
  * @author flpmko
