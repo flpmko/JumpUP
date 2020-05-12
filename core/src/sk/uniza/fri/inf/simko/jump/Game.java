@@ -14,12 +14,9 @@ import com.badlogic.gdx.utils.TimeUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Game extends ApplicationAdapter {
 
@@ -318,19 +315,25 @@ public class Game extends ApplicationAdapter {
         this.font.draw(batch, "GAME OVER", 70, 550);
         this.font.getData().setScale(2);
         
-        Scanner citac = new Scanner(new FileReader("highscore.txt"));
-        long highscore = citac.nextLong();
+        Scanner scan = new Scanner(new FileReader("highscore.txt"));
+        long highscore = scan.nextLong();
         
         if (this.scoreCounter > highscore) {
             highscore = this.scoreCounter;
-            File subor = new File("highscore.txt");
-            PrintWriter zapisovac = new PrintWriter(subor);
-            zapisovac.println(highscore);
-            zapisovac.close();
         }
         
-        this.font.draw(batch, "Highscore: " + highscore, 160, 400);
-        this.font.draw(batch, "Your score: " + this.scoreCounter, 160, 350);
+        File file = new File("highscore.txt");
+        PrintWriter writer = new PrintWriter(file);
+        writer.println(highscore);
+        writer.close();
+        
+        if (this.scoreCounter == highscore) {
+            this.font.draw(batch, "New highscore!", 150, 400);
+            this.font.draw(batch, "" + this.scoreCounter, 220, 360);
+        } else {
+            this.font.draw(batch, "Highscore: " + highscore, 160, 400);
+            this.font.draw(batch, "Your score: " + this.scoreCounter, 160, 350);
+        }
     }
 
     @Override

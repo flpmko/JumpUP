@@ -15,7 +15,7 @@ public class Cloud extends Platform {
     
     public Cloud() {
         super();
-        this.setTexture("glass.png");
+        this.setTexture("cloud.png");
         this.hitTime = 0;
     }
 
