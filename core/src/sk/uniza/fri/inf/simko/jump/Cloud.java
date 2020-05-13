@@ -10,8 +10,9 @@ package sk.uniza.fri.inf.simko.jump;
  *
  * @author flpmko
  */
+
 public class Cloud extends Platform {
-    private float hitTime;
+    private float hitTime; //cas od kolizie s danym cloudom
     
     public Cloud() {
         super();

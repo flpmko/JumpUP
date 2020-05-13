@@ -23,7 +23,7 @@ public class Player extends GameObject {
 
     private float acceleration;
     private float jumpTime;
-    private float dy;
+    private float dy; //delta y, velkost zmeny
     private float maxDY;
     private float lastY;
 
@@ -36,7 +36,7 @@ public class Player extends GameObject {
 
     public Player() {
         super("man.png", 32, 1, 500 / 2 - 16, 30);
-        this.acceleration = 5; //100
+        this.acceleration = 5;
         this.jumpTime = 0;
         this.dy = 0;
         this.maxDY = 10;
@@ -127,11 +127,11 @@ public class Player extends GameObject {
 
         if (this.canJump) {
             this.isJumping = true;
-            this.dy -= this.acceleration;
-            this.getRectangle().y -= this.jumpBuffer;
+            this.dy -= this.acceleration; //znizujem velkost zmeny v smere y o akceleraciu, akceleracia je vacsia ako gravitacia
+            this.getRectangle().y -= this.jumpBuffer; //tym padom vo fallingu zacne ist hore, takze tu este od y odratavam konstantu
             this.rectForCoins.y -= this.jumpBuffer;
 
-            if (this.jumpTime > this.maxJumpTime) {
+            if (this.jumpTime > this.maxJumpTime) { //ak cas skocu presiahne max povoleny cas, skakanie sa zakaze a cas sa zresetuje
                 this.canJump = false;
                 this.isJumping = false;
                 this.jumpTime = 0;
@@ -140,18 +140,18 @@ public class Player extends GameObject {
     }
 
     public void falling() {
-        this.dy += this.gravity;
-        this.getRectangle().y -= this.dy;
+        this.dy += this.gravity; //zvysujem velkost zmeny v smere y o gravitaciu
+        this.getRectangle().y -= this.dy; //znizujem y suradnicu o velkost zmeny
         this.rectForCoins.y -= this.dy;
         
-        this.lastY = this.getRectangle().y + this.dy;
+        this.lastY = this.getRectangle().y + this.dy; //zapamatavam si predoslu polohu y
 
-        if (this.getRectangle().y < this.lastY) {
+        if (this.getRectangle().y < this.lastY) { //porovnavam aktualny a predosli y, aby som zistil, ci padam
             this.isFalling = true;
         } else {
             this.isFalling = false;
         }
-        if (this.dy > this.maxDY) {
+        if (this.dy > this.maxDY) { //zabranuje tomu, aby sa velkost zmeny v smere y stale zvacsovala
             this.dy = this.maxDY;
         }
     }

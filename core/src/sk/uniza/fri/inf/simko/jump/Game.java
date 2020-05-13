@@ -32,6 +32,7 @@ public class Game extends ApplicationAdapter {
     private Platform lastSpawnedCloud;
     private Platform lastSpawnedSpring;
     private Platform lastSpawnedPlatform;
+    
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
 
@@ -51,6 +52,7 @@ public class Game extends ApplicationAdapter {
 
         this.player = new Player();
         this.gameObject = new Array<>();
+        
         this.spawnGround();
         this.spawnStart();
         this.spawnPlatform(Platform.class);
@@ -67,13 +69,11 @@ public class Game extends ApplicationAdapter {
     }
 
     @Override
-    public void render(){
+    public void render() {
         //vyfarbenie pozadia a update kamery
         Gdx.gl.glClearColor(135 / 255f, 206 / 255f, 235 / 255f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         this.camera.update();
-
-        //vykreslenie objektov
         this.batch.setProjectionMatrix(this.camera.combined);
 
         //vykreslovanie
@@ -104,13 +104,13 @@ public class Game extends ApplicationAdapter {
         this.checkPlayerBounds();
         this.checkSpawnTime();
 
-        //kontrola kolizie
+        //kontrola kolizie a skore
         this.checkCollision();
         this.checkCoins();
         this.checkScore();
     }
 
-    private void spawnPlatform(Class<?> platformType) {
+    private void spawnPlatform(Class<?> platformType) { //ako parameter zadavam triedu, podla toho aku platformu chcem
 
         boolean shouldGenerate = true;
         boolean isOverlap = false;
@@ -138,10 +138,10 @@ public class Game extends ApplicationAdapter {
         }
     }
 
-    private Platform createSpawnPlatform(Class<?> platformType) {
+    private Platform createSpawnPlatform(Class<?> platformType) { //ako parameter zadavam triedu, podla toho aku platformu chcem
         Platform p = new Platform();
         try {
-            p = (Platform)Class.forName(platformType.getName()).getDeclaredConstructor().newInstance();
+            p = (Platform)Class.forName(platformType.getName()).getDeclaredConstructor().newInstance(); //vytvori platformu pozadovanej triedy
         } catch (Exception e) {
             System.out.println(e.getStackTrace());
         }
@@ -156,14 +156,14 @@ public class Game extends ApplicationAdapter {
         return p;
     }
 
-    public void spawnStart() {
+    private void spawnStart() {
         for (int i = 0; i < 20; i++) {
             Platform p = new Platform(MathUtils.random(0, 500 - 64), 100 + 100 * i);
             this.gameObject.add(p);
         }
     }
 
-    public void spawnCoins() {
+    private void spawnCoins() {
         Coin coin = new Coin();
         this.gameObject.add(coin);
         for (GameObject object : this.gameObject) {
@@ -174,7 +174,7 @@ public class Game extends ApplicationAdapter {
     }
 
     //spawne zem na zaciatku hry
-    public void spawnGround() {
+    private void spawnGround() {
         Platform ground = new Platform(0, 0);
         ground.setTexture("ground.png");
         ground.setHeight(10);

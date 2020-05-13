@@ -13,9 +13,9 @@ import com.badlogic.gdx.math.Rectangle;
  * @author flpmko
  */
 public abstract class GameObject {
-    private Rectangle rectangle;
-    private Texture texture;
-    private Rectangle bounds;
+    private Rectangle rectangle; //obsahuje x, y, w, h data o objekte, koliduje s inymi objektami
+    private Texture texture; //graficka reprezentacia rectangle
+    private Rectangle bounds; //pouziva sa pri spawnovani platforiem, 2xh a 2xw normalneho rectangle
     
     public GameObject(String texture, int width, int height, int posX, int posY) {
         this.texture = new Texture(texture);
@@ -58,7 +58,7 @@ public abstract class GameObject {
     }
     
     public boolean objectCollision(GameObject object) {
-        if (this.getRectangle().overlaps(object.getRectangle())) {
+        if (this.getRectangle().overlaps(object.getRectangle())) { //skumam, ci sa rectangle mojho objektu prekryva s rectanglom objektu v parametri
             return true;
         } else {
             return false;

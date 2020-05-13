@@ -11,8 +11,8 @@ package sk.uniza.fri.inf.simko.jump;
  * @author flpmko
  */
 public class Spring extends Platform {
-    private float jumpTimeResetTimer;
-    private final double springJumpTime = 0.2;
+    private float jumpTimeResetTimer; //casovac, kedy sa ma casovac skoku hraca resetnut naspat
+    private final double springJumpTime = 0.2; //cas skoku, ktory da hracovi ked koliduje so springom
     
     public Spring() {
         super();
